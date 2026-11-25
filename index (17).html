@@ -1,0 +1,274 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#f5f5f2">
+  <meta name="description" content="Download the AnimeVault Kitsu and AniList metadata database.">
+  <title>AnimeVault — Anime metadata database</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --paper: #f5f5f2;
+      --surface: #fff;
+      --ink: #20211f;
+      --muted: #777a73;
+      --line: #e5e6df;
+      --accent: #536b56;
+      --accent-dark: #405443;
+      --soft: #edf1e9;
+      --radius: 18px;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      min-height: 100vh;
+      background: var(--paper);
+      color: var(--ink);
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      -webkit-font-smoothing: antialiased;
+    }
+    a { color: inherit; }
+    .page { width: min(1040px, calc(100% - 48px)); margin: 0 auto; }
+    header {
+      height: 76px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-bottom: 1px solid var(--line);
+    }
+    .brand {
+      display: inline-block;
+      color: var(--ink);
+      text-decoration: none;
+      font-family: Georgia, "Times New Roman", serif;
+      font-size: 19px;
+      font-weight: 600;
+      letter-spacing: -.055em;
+    }
+    .header-note { color: var(--muted); font-size: 12px; letter-spacing: .01em; }
+    main { padding: 76px 0 64px; }
+    .eyebrow {
+      display: inline-flex; align-items: center; gap: 8px; color: var(--accent);
+      font-size: 11px; font-weight: 700; letter-spacing: .13em; text-transform: uppercase;
+    }
+    .eyebrow::before { content: ""; width: 19px; height: 1px; background: currentColor; }
+    h1 {
+      max-width: 720px; margin: 19px 0 15px; font-size: clamp(42px, 7vw, 70px);
+      line-height: .99; letter-spacing: -.075em; font-weight: 620;
+    }
+    .intro { max-width: 580px; margin: 0; color: #666a63; font-size: 16px; line-height: 1.7; }
+    .download-panel {
+      margin-top: 42px; padding: 25px; background: var(--surface); border: 1px solid var(--line);
+      border-radius: var(--radius); display: flex; align-items: center; justify-content: space-between;
+      gap: 24px; box-shadow: 0 8px 28px rgba(35, 39, 31, .035);
+    }
+    .file-info { display: flex; align-items: center; gap: 15px; min-width: 0; }
+    .file-icon {
+      width: 48px; height: 48px; flex: 0 0 48px; border-radius: 13px;
+      display: grid; place-items: center; background: var(--soft); color: var(--accent);
+    }
+    .file-icon svg { width: 23px; height: 23px; }
+    .file-name { font-size: 15px; font-weight: 650; letter-spacing: -.025em; }
+    .file-meta { margin-top: 5px; color: var(--muted); font-size: 12px; }
+    button {
+      border: 0; border-radius: 11px; padding: 13px 18px; min-height: 46px;
+      background: var(--accent); color: white; font: inherit; font-size: 13px; font-weight: 650;
+      cursor: pointer; display: inline-flex; align-items: center; justify-content: center; gap: 10px;
+      white-space: nowrap; transition: background .16s ease, transform .16s ease;
+    }
+    button:hover { background: var(--accent-dark); transform: translateY(-1px); }
+    button:focus-visible, a:focus-visible { outline: 3px solid #a9bca8; outline-offset: 3px; }
+    button:disabled { opacity: .65; cursor: wait; transform: none; }
+    button svg { width: 16px; height: 16px; }
+    .status { display: none; margin-top: 13px; padding: 12px 14px; border-radius: 10px; background: #edf1e9; color: #435746; font-size: 12px; line-height: 1.5; }
+    .status.visible { display: block; }
+    .status.error { background: #f7ece8; color: #8a4638; }
+    .progress { display: none; margin-top: 12px; height: 3px; border-radius: 4px; background: #e9ebe5; overflow: hidden; }
+    .progress.visible { display: block; }
+    .progress span { display: block; width: 0; height: 100%; background: var(--accent); transition: width .15s ease; }
+    .details { margin-top: 68px; display: grid; grid-template-columns: 1.1fr .9fr; gap: 56px; }
+    h2 { margin: 0 0 18px; font-size: 13px; font-weight: 700; letter-spacing: .01em; }
+    .stats { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); border-top: 1px solid var(--line); }
+    .stat { padding: 18px 12px 18px 0; border-bottom: 1px solid var(--line); }
+    .stat:nth-child(odd) { border-right: 1px solid var(--line); }
+    .stat:nth-child(even) { padding-left: 22px; }
+    .stat-value { font-size: 25px; font-weight: 620; letter-spacing: -.055em; }
+    .stat-label { margin-top: 5px; color: var(--muted); font-size: 11px; }
+    .sources { border-top: 1px solid var(--line); }
+    .source { padding: 16px 0; border-bottom: 1px solid var(--line); display: flex; justify-content: space-between; gap: 15px; font-size: 13px; }
+    .source span:last-child { color: var(--muted); font-variant-numeric: tabular-nums; }
+    .note { margin-top: 18px; color: var(--muted); font-size: 11px; line-height: 1.65; }
+    footer { padding: 22px 0 30px; border-top: 1px solid var(--line); color: var(--muted); font-size: 11px; display: flex; justify-content: space-between; gap: 16px; }
+    footer a { text-decoration: none; }
+    footer a:hover { color: var(--ink); }
+    @media (max-width: 680px) {
+      .page { width: min(100% - 32px, 540px); }
+      header { height: 65px; }
+      .header-note { display: none; }
+      main { padding: 54px 0 48px; }
+      .download-panel { align-items: stretch; flex-direction: column; padding: 19px; gap: 18px; }
+      .download-panel button { width: 100%; }
+      .details { margin-top: 48px; grid-template-columns: 1fr; gap: 36px; }
+      footer { flex-direction: column; }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after { scroll-behavior: auto !important; transition: none !important; }
+    }
+  </style>
+</head>
+<body>
+  <div class="page">
+    <header>
+      <a class="brand" href="#" aria-label="AnimeVault home">AnimeVault</a>
+      <span class="header-note">Open anime metadata · SQLite</span>
+    </header>
+
+    <main>
+      <div class="eyebrow">Database release</div>
+      <h1>Anime data,<br>ready to use.</h1>
+      <p class="intro">A consolidated anime metadata database built from Kitsu and AniList records, with episode-level data from Kitsu. Download the SQLite file and use it in your own tools and projects.</p>
+
+      <section class="download-panel" aria-label="Database download">
+        <div class="file-info">
+          <div class="file-icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+              <ellipse cx="12" cy="5" rx="7.5" ry="3"></ellipse>
+              <path d="M4.5 5v7c0 1.7 3.4 3 7.5 3s7.5-1.3 7.5-3V5M4.5 12v7c0 1.7 3.4 3 7.5 3s7.5-1.3 7.5-3v-7"></path>
+            </svg>
+          </div>
+          <div>
+            <div class="file-name">anime.db</div>
+            <div class="file-meta">SQLite database · 491 MB</div>
+          </div>
+        </div>
+        <button id="downloadButton" type="button">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M12 3v12m0 0 4-4m-4 4-4-4M5 17v3h14v-3"></path>
+          </svg>
+          <span id="buttonText">Download database</span>
+        </button>
+      </section>
+      <div class="progress" id="progress" aria-hidden="true"><span id="progressBar"></span></div>
+      <div class="status" id="status" role="status" aria-live="polite"></div>
+
+      <section class="details">
+        <div>
+          <h2>Inside the database</h2>
+          <div class="stats">
+            <div class="stat"><div class="stat-value">23,603</div><div class="stat-label">Anime records</div></div>
+            <div class="stat"><div class="stat-value">291,485</div><div class="stat-label">Episode records</div></div>
+            <div class="stat"><div class="stat-value">491 MB</div><div class="stat-label">Database size</div></div>
+            <div class="stat"><div class="stat-value">2</div><div class="stat-label">Metadata sources</div></div>
+          </div>
+        </div>
+        <div>
+          <h2>Source breakdown</h2>
+          <div class="sources">
+            <div class="source"><span>Kitsu anime</span><span>22,573</span></div>
+            <div class="source"><span>AniList anime</span><span>1,030</span></div>
+            <div class="source"><span>Kitsu episodes</span><span>291,485</span></div>
+          </div>
+          <p class="note">The database contains anime metadata from both sources. Episode records are from Kitsu. Source identifiers are retained to help distinguish records.</p>
+        </div>
+      </section>
+    </main>
+
+    <footer>
+      <span>AnimeVault · Community database release</span>
+      <span>Data sourced from <a href="https://kitsu.app/" target="_blank" rel="noopener noreferrer">Kitsu</a> and <a href="https://anilist.co/" target="_blank" rel="noopener noreferrer">AniList</a>.</span>
+    </footer>
+  </div>
+
+  <script>
+    const DATABASE_URL = "https://download1349.mediafire.com/z68lkd96lpvgWDp54qdPrvqx8OBYl75-G9-MVEoucgj5G-LBDjIS5howODuBs5NklFpNd4oqqDwCJdQ1txdAKJ4rK13MaSZP6heyMFtBmkNZyMyJu07HG0r0mpXmPzg-AefLaMFJghgfKNVPH-_z8VvvSyvhCUrz6NjuXI9DSYe7Rg/uj4zkmi7ug4ljal/anime.db";
+
+    const button = document.getElementById("downloadButton");
+    const buttonText = document.getElementById("buttonText");
+    const statusBox = document.getElementById("status");
+    const progress = document.getElementById("progress");
+    const progressBar = document.getElementById("progressBar");
+
+    function setStatus(message, type = "success") {
+      statusBox.textContent = message;
+      statusBox.className = "status visible" + (type === "error" ? " error" : "");
+    }
+
+    function directDownload() {
+      // Fallback for hosts that do not allow cross-origin fetch (CORS).
+      const link = document.createElement("a");
+      link.href = DATABASE_URL;
+      link.download = "anime.db";
+      link.rel = "noopener";
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+    }
+
+    button.addEventListener("click", async () => {
+      button.disabled = true;
+      buttonText.textContent = "Connecting…";
+      statusBox.className = "status";
+      progress.className = "progress visible";
+      progressBar.style.width = "3%";
+
+      try {
+        const response = await fetch(DATABASE_URL, { mode: "cors", cache: "no-store" });
+        if (!response.ok) throw new Error(`The file host returned HTTP ${response.status}.`);
+        const reader = response.body?.getReader();
+
+        if (!reader) {
+          const blob = await response.blob();
+          saveBlob(blob);
+          return;
+        }
+
+        const total = Number(response.headers.get("content-length")) || 0;
+        let received = 0;
+        const chunks = [];
+
+        buttonText.textContent = "Downloading…";
+        while (true) {
+          const { done, value } = await reader.read();
+          if (done) break;
+          chunks.push(value);
+          received += value.length;
+          if (total) {
+            const percent = Math.min(99, Math.round((received / total) * 100));
+            progressBar.style.width = percent + "%";
+            buttonText.textContent = `Downloading ${percent}%`;
+            setStatus(`${(received / 1048576).toFixed(1)} MB of ${(total / 1048576).toFixed(1)} MB received.`);
+          } else {
+            setStatus(`${(received / 1048576).toFixed(1)} MB received.`);
+          }
+        }
+
+        saveBlob(new Blob(chunks, { type: "application/octet-stream" }));
+      } catch (error) {
+        progress.className = "progress";
+        progressBar.style.width = "0%";
+        setStatus("The file host did not allow a browser fetch (often a CORS restriction). Opening the original download link instead.", "error");
+        buttonText.textContent = "Open database download";
+        directDownload();
+        button.disabled = false;
+      }
+    });
+
+    function saveBlob(blob) {
+      const objectUrl = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = objectUrl;
+      link.download = "anime.db";
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      setTimeout(() => URL.revokeObjectURL(objectUrl), 60_000);
+
+      progressBar.style.width = "100%";
+      setStatus("Download started. Your browser should save the file as anime.db.");
+      buttonText.textContent = "Download again";
+      button.disabled = false;
+    }
+  </script>
+</body>
+</html>
